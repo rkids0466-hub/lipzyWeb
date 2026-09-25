@@ -1,1 +1,467 @@
-# lipzyWeb
+<!DOCTYPE html><html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>LipzyHub Quiz</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+    }
+
+    body {
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+
+        background:
+            radial-gradient(circle at top, #24104d, #050505 55%);
+        color: white;
+    }
+
+    .box {
+        width: 100%;
+        max-width: 430px;
+        padding: 30px;
+        border-radius: 25px;
+
+        background: rgba(15, 15, 20, 0.95);
+
+        border: 2px solid #7b2cff;
+
+        box-shadow:
+            0 0 20px #7b2cff,
+            0 0 50px rgba(0, 140, 255, 0.3);
+
+        text-align: center;
+    }
+
+    h1 {
+        margin-bottom: 10px;
+
+        background: linear-gradient(
+            90deg,
+            red,
+            orange,
+            yellow,
+            lime,
+            cyan,
+            blue,
+            violet
+        );
+
+        background-size: 400%;
+
+        -webkit-background-clip: text;
+        background-clip: text;
+
+        color: transparent;
+
+        animation: rainbow 5s linear infinite;
+    }
+
+    @keyframes rainbow {
+        0% {
+            background-position: 0%;
+        }
+
+        100% {
+            background-position: 400%;
+        }
+    }
+
+    .info {
+        color: #aaa;
+        margin-bottom: 25px;
+    }
+
+    .question {
+        font-size: 32px;
+        font-weight: bold;
+
+        margin: 25px 0;
+
+        color: white;
+
+        text-shadow:
+            0 0 10px #7b2cff;
+    }
+
+    input {
+        width: 100%;
+        padding: 16px;
+
+        border-radius: 15px;
+        border: 2px solid #7b2cff;
+
+        background: #080808;
+
+        color: white;
+
+        font-size: 20px;
+        text-align: center;
+
+        outline: none;
+    }
+
+    input:focus {
+        box-shadow:
+            0 0 15px #7b2cff;
+    }
+
+    button {
+        width: 100%;
+        margin-top: 15px;
+
+        padding: 16px;
+
+        border: none;
+        border-radius: 15px;
+
+        background:
+            linear-gradient(
+                90deg,
+                #7b2cff,
+                #008cff
+            );
+
+        color: white;
+
+        font-size: 18px;
+        font-weight: bold;
+
+        cursor: pointer;
+
+        transition: 0.2s;
+    }
+
+    button:active {
+        transform: scale(0.96);
+    }
+
+    #message {
+        min-height: 25px;
+        margin-top: 15px;
+        font-weight: bold;
+    }
+
+    #success {
+        display: none;
+    }
+
+    .code {
+        margin-top: 20px;
+
+        display: flex;
+        gap: 8px;
+    }
+
+    .code input {
+        flex: 1;
+        font-size: 16px;
+    }
+
+    .copy {
+        width: auto;
+        margin: 0;
+        padding: 0 18px;
+    }
+
+    .counter {
+        margin-top: 15px;
+        color: #aaa;
+    }
+</style>
+
+</head><body><div class="box">
+
+    <!-- BAGIAN QUIZ -->
+    <div id="quiz">
+
+        <h1>LipzyHub Quiz</h1>
+
+        <p class="info">
+            Jawab 3 pertanyaan dengan benar
+        </p>
+
+        <div class="question" id="question">
+            Loading...
+        </div>
+
+        <input
+            type="number"
+            id="answer"
+            placeholder="Masukkan jawaban"
+            autocomplete="off"
+        >
+
+        <button onclick="checkAnswer()">
+            JAWAB
+        </button>
+
+        <div id="message"></div>
+
+        <div class="counter">
+            Benar: <span id="counter">0</span> / 3
+        </div>
+
+    </div>
+
+
+    <!-- BAGIAN SELESAI -->
+    <div id="success">
+
+        <h1>🎉 BERHASIL!</h1>
+
+        <p class="info">
+            Kamu sudah menjawab 3 pertanyaan dengan benar.
+        </p>
+
+        <div class="code">
+
+            <input
+                id="code"
+                value="LipzyHubXZalHub"
+                readonly
+            >
+
+            <button
+                class="copy"
+                onclick="copyCode()"
+            >
+                COPY
+            </button>
+
+        </div>
+
+        <div id="copyMessage"></div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+    // Semua pertanyaan
+    const questions = [
+
+        {
+            text: "62 × 82 = ?",
+            answer: 62 * 82
+        },
+
+        {
+            text: "9 × 7 = ?",
+            answer: 9 * 7
+        },
+
+        {
+            text: "92 × 11 = ?",
+            answer: 92 * 11
+        },
+
+        {
+            text: "10 × 90 = ?",
+            answer: 10 * 90
+        },
+
+        {
+            text: "82 × 11 = ?",
+            answer: 82 * 11
+        },
+
+        {
+            text: "92 - 52 = ?",
+            answer: 92 - 52
+        },
+
+        {
+            text: "83 + 92 = ?",
+            answer: 83 + 92
+        },
+
+        {
+            text: "72 - 66 = ?",
+            answer: 72 - 66
+        }
+
+    ];
+
+
+    let currentQuestion;
+
+    let correctCount = 0;
+
+    let usedQuestions = [];
+
+
+    // Membuat soal acak
+    function newQuestion() {
+
+        // Kalau semua soal sudah dipakai,
+        // daftar direset
+        if (usedQuestions.length === questions.length) {
+            usedQuestions = [];
+        }
+
+        let randomIndex;
+
+        do {
+
+            randomIndex =
+                Math.floor(
+                    Math.random() * questions.length
+                );
+
+        } while (
+            usedQuestions.includes(randomIndex)
+        );
+
+
+        usedQuestions.push(randomIndex);
+
+        currentQuestion =
+            questions[randomIndex];
+
+
+        document.getElementById("question").innerText =
+            currentQuestion.text;
+
+
+        document.getElementById("answer").value = "";
+
+        document.getElementById("answer").focus();
+    }
+
+
+    // Mengecek jawaban
+    function checkAnswer() {
+
+        const input =
+            document.getElementById("answer");
+
+        const userAnswer =
+            Number(input.value);
+
+
+        if (input.value.trim() === "") {
+
+            document.getElementById("message").innerText =
+                "⚠️ Masukkan jawaban dulu.";
+
+            document.getElementById("message").style.color =
+                "orange";
+
+            return;
+        }
+
+
+        if (userAnswer === currentQuestion.answer) {
+
+            correctCount++;
+
+
+            document.getElementById("counter").innerText =
+                correctCount;
+
+
+            document.getElementById("message").innerText =
+                "✅ Jawaban benar!";
+
+            document.getElementById("message").style.color =
+                "#00ff88";
+
+
+            // Sudah 3 benar
+            if (correctCount >= 3) {
+
+                setTimeout(() => {
+
+                    document.getElementById("quiz").style.display =
+                        "none";
+
+                    document.getElementById("success").style.display =
+                        "block";
+
+                }, 500);
+
+            } else {
+
+                setTimeout(() => {
+
+                    document.getElementById("message").innerText =
+                        "";
+
+                    newQuestion();
+
+                }, 500);
+
+            }
+
+        } else {
+
+            document.getElementById("message").innerText =
+                "❌ Jawaban salah! Coba lagi.";
+
+            document.getElementById("message").style.color =
+                "#ff4444";
+
+            input.select();
+        }
+    }
+
+
+    // Tombol Enter
+    document.getElementById("answer")
+        .addEventListener("keydown", function(event) {
+
+            if (event.key === "Enter") {
+                checkAnswer();
+            }
+
+        });
+
+
+    // Copy kode
+    async function copyCode() {
+
+        const code =
+            "LipzyHubXZalHub";
+
+        try {
+
+            await navigator.clipboard.writeText(code);
+
+            document.getElementById("copyMessage").innerText =
+                "✅ Berhasil disalin!";
+
+            document.getElementById("copyMessage").style.color =
+                "#00ff88";
+
+        } catch (error) {
+
+            const input =
+                document.getElementById("code");
+
+            input.select();
+
+            document.execCommand("copy");
+
+            document.getElementById("copyMessage").innerText =
+                "✅ Berhasil disalin!";
+        }
+    }
+
+
+    // Mulai dengan soal acak
+    newQuestion();
+
+</script>
+
+</body>
+</html>
